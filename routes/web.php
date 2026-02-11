@@ -30,7 +30,12 @@ Route::get('about', function () {
 Route::middleware(['auth', 'verified'])->group(function () {
 
     // Dashboard
-    Route::get('/dashboard', [BookController::class, 'index'])->name('dashboard');
+    Route::get('/dashboard', function () {
+        return Inertia::render('Dashboard', [
+            'user' => auth()->user(),
+            'books' => Book::latest()->get(),
+        ]);
+    })->middleware(['auth', 'verified'])->name('dashboard');
 
     // Profile management
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');

@@ -3,6 +3,7 @@ import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import { Head, Link, router } from '@inertiajs/vue3';
 
 defineProps({
+    user: Object,   // <-- Add this to receive the logged-in user
     books: Array,
 });
 
@@ -29,6 +30,13 @@ function borrowBook(bookId) {
 
         <div class="py-12">
             <div class="max-w-6xl mx-auto space-y-6">
+
+                <!-- User Info -->
+                <div class="bg-white p-6 shadow rounded">
+                    <h3 class="text-lg font-semibold mb-2">Signed-in User</h3>
+                    <p><strong>Name:</strong> {{ user.name }}</p>
+                    <p><strong>Email:</strong> {{ user.email }}</p>
+                </div>
 
                 <!-- Add Book Button -->
                 <div>
@@ -59,7 +67,6 @@ function borrowBook(bookId) {
                             >
                                 Delete
                             </button>
-
 
                             <button
                                 class="px-3 py-1 bg-green-600 text-white rounded hover:bg-green-500"
