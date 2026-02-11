@@ -4,20 +4,18 @@ namespace App\Http\Controllers;
 
 use App\Models\Book;
 use App\Models\Borrowing;
-use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Inertia\Inertia;
-
 
 class BorrowingController extends Controller
 {
     public function borrow(Book $book)
     {
         if ($book->available_copies < 1) {
-            return response()->json(['message' => 'Book not available'], 400);
+            return redirect()->back()->with('error', 'Book not available');
         }
 
-        $borrowing = Borrowing::create([
+        Borrowing::create([
             'user_id' => auth()->id(),
             'book_id' => $book->id,
             'borrowed_at' => now(),
@@ -26,16 +24,7 @@ class BorrowingController extends Controller
 
         $book->decrement('available_copies');
 
-        return $borrowing;
-    }
-
-    public function myBorrowedBooks()
-    {
-        $borrowedBooks = auth()->user()->borrowings()->with('book')->get();
-
-        return Inertia::render('BorrowedBooks', [
-            'borrowedBooks' => $borrowedBooks
-        ]);
+        return redirect()->back()->with('success', 'Book borrowed successfully!');
     }
 
     public function return(Book $book)
@@ -45,13 +34,21 @@ class BorrowingController extends Controller
             ->whereNull('returned_at')
             ->firstOrFail();
 
-        $borrowing->update([
-            'returned_at' => now(),
-        ]);
-
+        $borrowing->update(['returned_at' => now()]);
         $book->increment('available_copies');
 
-        return response()->json(['message' => 'Book returned successfully']);
+        return redirect()->back()->with('success', 'Book returned successfully!');
+    }
+
+    public function myBorrowedBooks()
+    {
+        $borrowedBooks = auth()->user()->borrowings()
+            ->with('book')
+            ->whereNull('returned_at')
+            ->get();
+
+        return Inertia::render('BorrowedBooks', [
+            'borrowedBooks' => $borrowedBooks,
+        ]);
     }
 }
-

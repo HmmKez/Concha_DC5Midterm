@@ -1,13 +1,13 @@
 <?php
 
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\BookController;
+use App\Http\Controllers\BorrowingController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 use App\Models\Book;
 use App\Models\Borrowing;
-use App\Http\Controllers\BookController;
-use App\Http\Controllers\BorrowingController;
 
 Route::get('/', function () {
     return Inertia::render('Welcome', [
@@ -26,38 +26,30 @@ Route::get('about', function () {
     return Inertia::render('AboutPage');
 })->name('about-page');
 
-Route::get('/dashboard', function () {
-    return Inertia::render('Dashboard', [
-        'user' => auth()->user(),
-        'books' => Book::latest()->get(),
-        'borrowings' => Borrowing::with('book')
-            ->where('user_id', auth()->id())
-            ->whereNull('returned_at')
-            ->get(),
-    ]);
-})->middleware(['auth', 'verified'])->name('dashboard');
+// Authenticated routes
+Route::middleware(['auth', 'verified'])->group(function () {
 
-Route::middleware('auth')->group(function () {
+    // Dashboard
+    Route::get('/dashboard', [BookController::class, 'index'])->name('dashboard');
+
+    // Profile management
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 
+    // Book management
     Route::get('/books/create', function () {
         return Inertia::render('Books/Create');
-    })->middleware('auth')->name('books.create');
+    })->name('books.create');
 
-    
-    Route::get('/borrowed-books', [BorrowingController::class, 'myBorrowedBooks'])
-        ->middleware(['auth', 'verified'])
-        ->name('borrowed-books');
-
-    Route::post('/books', [BookController::class, 'store'])
-        ->middleware('auth')
-        ->name('books.store');
-
+    Route::post('/books', [BookController::class, 'store'])->name('books.store');
+    Route::delete('/books/{book}', [BookController::class, 'destroy'])->name('books.destroy');
     Route::get('/books', [BookController::class, 'index'])->name('books.index');
+
+    // Borrowing books
     Route::post('/books/{book}/borrow', [BorrowingController::class, 'borrow'])->name('books.borrow');
     Route::post('/books/{book}/return', [BorrowingController::class, 'return'])->name('books.return');
+    Route::get('/borrowed-books', [BorrowingController::class, 'myBorrowedBooks'])->name('borrowed-books');
 });
 
 require __DIR__.'/auth.php';

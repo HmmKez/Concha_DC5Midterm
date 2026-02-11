@@ -1,7 +1,7 @@
 <script setup>
 import { Head, router } from '@inertiajs/vue3';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
-import { reactive } from 'vue';
+import { reactive, watch } from 'vue';
 
 const form = reactive({
     title: '',
@@ -11,11 +11,18 @@ const form = reactive({
     available_copies: 1,
 });
 
+watch(() => form.total_copies, (val) => {
+    form.available_copies = val;
+});
+
+const errors = reactive({});
+
 function submit() {
-    router.post(route('books.store'), form);
+    router.post(route('books.store'), form, {
+        onError: (errs) => Object.assign(errors, errs),
+    });
 }
 
-// Navigate back to the dashboard
 function goBack() {
     router.get(route('dashboard'));
 }
@@ -32,7 +39,6 @@ function goBack() {
         <div class="py-12">
             <div class="max-w-xl mx-auto bg-white p-6 shadow rounded space-y-4">
 
-                <!-- Back Button -->
                 <button
                     @click="goBack"
                     type="button"
@@ -41,22 +47,31 @@ function goBack() {
                     ← Back to Dashboard
                 </button>
 
-                <!-- Form -->
                 <form @submit.prevent="submit" class="space-y-4">
-                    <input v-model="form.title" placeholder="Title" class="w-full border p-2 rounded" />
-                    <input v-model="form.author" placeholder="Author" class="w-full border p-2 rounded" />
-                    <input v-model="form.isbn" placeholder="ISBN" class="w-full border p-2 rounded" />
+
+                    <div>
+                        <input v-model="form.title" placeholder="Title" class="w-full border p-2 rounded" />
+                        <p v-if="errors.title" class="text-red-600 text-sm">{{ errors.title }}</p>
+                    </div>
+
+                    <div>
+                        <input v-model="form.author" placeholder="Author" class="w-full border p-2 rounded" />
+                        <p v-if="errors.author" class="text-red-600 text-sm">{{ errors.author }}</p>
+                    </div>
+
+                    <div>
+                        <input v-model="form.isbn" placeholder="ISBN" class="w-full border p-2 rounded" />
+                        <p v-if="errors.isbn" class="text-red-600 text-sm">{{ errors.isbn }}</p>
+                    </div>
 
                     <div>
                         <input
-                            id="totalcopies"
-                            name="totalcopies"
                             type="number"
                             v-model="form.total_copies"
                             class="w-full border p-2 rounded"
                             placeholder="Total Copies"
                         />
-                        <label for="totalcopies" class="text-gray-600 text-sm">Total Copies</label>
+                        <p v-if="errors.total_copies" class="text-red-600 text-sm">{{ errors.total_copies }}</p>
                     </div>
 
                     <button class="w-full bg-indigo-600 text-white py-2 rounded">

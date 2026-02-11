@@ -3,13 +3,19 @@ import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import { Head, Link, router } from '@inertiajs/vue3';
 
 defineProps({
-    user: Object,
     books: Array,
-    borrowings: Array,
 });
 
-function returnBook(bookId) {
-    router.post(route('books.return', bookId));
+// Delete a book
+function deleteBook(bookId) {
+    if (confirm('Are you sure you want to delete this book?')) {
+        router.delete(route('books.destroy', bookId));
+    }
+}
+
+// Borrow a book
+function borrowBook(bookId) {
+    router.post(route('books.borrow', bookId));
 }
 </script>
 
@@ -18,51 +24,52 @@ function returnBook(bookId) {
 
     <AuthenticatedLayout>
         <template #header>
-            <h2 class="text-xl font-semibold leading-tight text-gray-800">
-                Dashboard
-            </h2>
+            <h2 class="text-xl font-semibold text-gray-800">Dashboard</h2>
         </template>
 
-        <div class="py-12 space-y-6">
-            <div class="mx-auto max-w-7xl sm:px-6 lg:px-8 space-y-6">
+        <div class="py-12">
+            <div class="max-w-6xl mx-auto space-y-6">
 
-                <!-- User Info -->
-                <div class="bg-white p-6 shadow sm:rounded-lg">
-                    <h3 class="text-lg font-semibold mb-2">Signed In User</h3>
-                    <p><strong>Name:</strong> {{ user.name }}</p>
-                    <p><strong>Email:</strong> {{ user.email }}</p>
-                </div>
-
-                <!-- Actions -->
-                <div class="bg-white p-6 shadow sm:rounded-lg">
+                <!-- Add Book Button -->
+                <div>
                     <Link
                         :href="route('books.create')"
-                        class="inline-block px-4 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-500"
+                        class="px-4 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-500"
                     >
                         + Add New Book
                     </Link>
                 </div>
 
-                <!-- Books List -->
-                <div class="bg-white p-6 shadow sm:rounded-lg">
-                    <h3 class="text-lg font-semibold mb-4">Books in the System</h3>
+                <!-- No books message -->
+                <div v-if="books.length === 0" class="text-gray-500 mt-4">
+                    No books added yet.
+                </div>
 
-                    <div v-if="books.length === 0" class="text-gray-500">
-                        No books added yet.
+                <!-- Books grid -->
+                <div v-else class="grid gap-4 md:grid-cols-2 lg:grid-cols-3 mt-4">
+                    <div v-for="book in books" :key="book.id" class="p-4 border rounded bg-white shadow">
+                        <p class="font-semibold text-lg">{{ book.title }}</p>
+                        <p class="text-sm text-gray-600">{{ book.author }}</p>
+                        <p class="text-sm text-gray-600 mt-1">Available: {{ book.available_copies }}</p>
+
+                        <div class="mt-3 flex space-x-2">
+                            <button
+                                class="px-3 py-1 bg-red-600 text-white rounded hover:bg-red-500"
+                                @click="deleteBook(book.id)"
+                            >
+                                Delete
+                            </button>
+
+
+                            <button
+                                class="px-3 py-1 bg-green-600 text-white rounded hover:bg-green-500"
+                                :disabled="book.available_copies < 1"
+                                @click="borrowBook(book.id)"
+                            >
+                                Borrow
+                            </button>
+                        </div>
                     </div>
-
-                    <ul v-else class="space-y-3">
-                        <li
-                            v-for="book in books"
-                            :key="book.id"
-                            class="border p-4 rounded"
-                        >
-                            <p class="font-semibold">{{ book.title }}</p>
-                            <p class="text-sm text-gray-600">
-                                {{ book.author }} — Available: {{ book.available_copies }}
-                            </p>
-                        </li>
-                    </ul>
                 </div>
 
             </div>
